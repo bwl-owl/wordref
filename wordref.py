@@ -1,12 +1,14 @@
 import json, requests, os.path, csv, sys, re
 from bs4 import BeautifulSoup, NavigableString
 
-DEFAULT_RESULTS_FILE_NAME = 'wordref_results.csv'
-DEFAULT_MAX_RESULTS = 3
+#TODO: input validation
 
-from_lang = 'fr'
-to_lang = 'en'
+from_lang = input('Enter language to translate from (ISO 639-1 code, e.g. \'en\' for English): ')
+to_lang = input('Enter language to translate to (ISO 639-1 code, e.g. \'en\' for English): ')
 search_term = ''
+
+DEFAULT_RESULTS_FILE_NAME = 'wordref_% s.csv'% (from_lang+to_lang)
+DEFAULT_MAX_RESULTS = 3
 
 print('Enter the name of the file you\'d like the results to be saved to (leave blank for default = % s): '% DEFAULT_RESULTS_FILE_NAME, end='')
 outfile = input();
@@ -21,8 +23,10 @@ except:
 
 def format_definition(element):
   word = element.contents[0] if isinstance(element.contents[0], NavigableString) else element.contents[0].text
-  part_of_speech = element.find('i').text if element.find('i') else ''
-  return '% s (% s)'% (word, part_of_speech)
+  if part_of_speech := element.find('i'):
+    return '% s (% s)'% (word, part_of_speech.text)
+  else:
+    return '% s'% word
 
 def update_result(result, key, value):
   result[key].append(value)
@@ -75,7 +79,7 @@ while True:
   search_term = input()
 
   if search_term == '\q':
-    print("A plus!")
+    print('bye')
     sys.exit(0)
   else:
     url = 'https://wordreference.com/' + from_lang + to_lang + '/' + search_term
